@@ -1,23 +1,46 @@
-import { Pie } from "react-chartjs-2";
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
+import { useState } from "react";
+import API from "../api/axios";
 
-ChartJS.register(ArcElement, Tooltip, Legend);
+const HealthForm = ({ setResult }) => {
+  const [form, setForm] = useState({
+    sleep: 3,
+    appetite: 3,
+    stress: 3,
+    activity: 3
+  });
 
-const HealthChart = ({ data }) => {
-  const chartData = {
-    labels: ["Sleep", "Appetite", "Stress", "Activity"],
-    datasets: [
-      {
-        data: [data.sleep, data.appetite, data.stress, data.activity],
-      },
-    ],
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: Number(e.target.value) });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const res = await API.post("/health", form);
+    setResult(res.data);
   };
 
   return (
-    <div style={{ width: "300px" }}>
-      <Pie data={chartData} />
-    </div>
+    <form onSubmit={handleSubmit}>
+      <h2>Health Form</h2>
+
+      {["sleep", "appetite", "stress", "activity"].map((field) => (
+        <div key={field}>
+          <label>{field}</label>
+          <input
+            type="number"
+            name={field}
+            min="1"
+            max="5"
+            value={form[field]}
+            onChange={handleChange}
+          />
+        </div>
+      ))}
+
+      <button type="submit">Submit</button>
+    </form>
   );
 };
 
-export default HealthChart;
+export default HealthForm;

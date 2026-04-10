@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Activity } from 'lucide-react';
+import API from "../api/axios";
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -8,14 +9,27 @@ export default function AuthPage() {
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (email && password) {
-      // Simulate authentication
-      navigate('/dashboard');
+
+    try {
+      if (isLogin) {
+        await API.post("/auth/login", { email, password });
+      } else {
+        await API.post("/auth/signup", {
+          name: "User", // temporary
+          email,
+          password
+        });
+      }
+
+      navigate("/dashboard");
+    } catch (err) {
+      alert(err.response?.data?.message || "Error");
     }
   };
-
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-100 transition-all duration-300">
