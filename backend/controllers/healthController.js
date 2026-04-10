@@ -59,3 +59,28 @@ export const getHealthHistory = async (req, res) => {
     res.status(500).json({ message: "Error fetching history" });
   }
 };
+
+// GET SINGLE HEALTH ENTRY
+export const getSingleHealth = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const health = await Health.findById(id);
+
+    // ❌ Not found
+    if (!health) {
+      return res.status(404).json({ message: "Health record not found" });
+    }
+
+    // ❌ Security check (IMPORTANT)
+    if (health.user.toString() !== req.user) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    res.json(health);
+
+  } catch (err) {
+    console.error("Error fetching single health:", err);
+    res.status(500).json({ message: "Error fetching health data" });
+  }
+};
