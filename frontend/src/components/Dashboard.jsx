@@ -1,199 +1,105 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Activity, BarChart3, Clock, User, HeartPulse } from 'lucide-react';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
-import { Pie } from 'react-chartjs-2';
+import { LogOut, Activity, Loader2 } from 'lucide-react';
 import API from "../api/axios";
-
-ChartJS.register(ArcElement, Tooltip, Legend);
+import HealthForm from './HealthForm';
+import ResultSection from './ResultSection';
+import HistoryTable from './HistoryTable';
 
 export default function Dashboard() {
   const navigate = useNavigate();
-
-  // Form State
-  const [formData, setFormData] = useState({
-    sleepQuality: 3,
-    appetite: 3,
-    stressLevel: 3,
-    physicalActivity: 3,
-  });
-
-  // Results State
   const [result, setResult] = useState(null);
+  const [history, setHistory] = useState([]); 
+  const [fetching, setFetching] = useState(true);
 
-  // History State
-  const [history, setHistory] = useState([]);
+  const getStatus = (score) => {
+    if (score >= 16) return "Excellent";
+    if (score >= 12) return "Good";
+    if (score >= 8) return "Moderate";
+    return "Poor";
+  };
 
-  // 🔥 Fetch history from backend
   useEffect(() => {
     const fetchHistory = async () => {
       try {
         const res = await API.get("/health");
-
-        const formatted = res.data.map((item) => ({
+        // Extra Safety: Ensure we are dealing with an array
+        const rawData = Array.isArray(res.data) ? res.data : [];
+        
+        const formatted = rawData.map((item) => ({
           id: item._id,
-          date: new Date(item.createdAt).toISOString().split("T")[0],
+          date: item.createdAt,
           score: item.score,
-          status:
-            item.score >= 12
-              ? "Good"
-              : item.score >= 8
-              ? "Moderate"
-              : "Poor",
+          status: getStatus(item.score),
         }));
 
         setHistory(formatted);
       } catch (err) {
-        console.log(err);
+        console.error("Error fetching history:", err);
+        setHistory([]); // Fallback to empty array
+      } finally {
+        setFetching(false);
       }
     };
-
     fetchHistory();
   }, []);
 
-  const handleSliderChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: parseInt(value) }));
+  const handleSuccess = (newResult) => {
+    setResult(newResult);
+    setHistory((prev) => [
+      {
+        id: newResult._id || Date.now(),
+        date: newResult.createdAt || new Date().toISOString(),
+        score: newResult.score,
+        status: getStatus(newResult.score),
+      },
+      ...prev,
+    ]);
   };
 
-  // 🔥 Backend API call
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
+  const handleSelect = async (id) => {
     try {
-      const res = await API.post("/health", {
-        sleep: formData.sleepQuality,
-        appetite: formData.appetite,
-        stress: formData.stressLevel,
-        activity: formData.physicalActivity,
-      });
-
+      const res = await API.get(`/health/${id}`);
       setResult(res.data);
-
-      // Update history instantly
-      setHistory([
-        {
-          id: res.data._id,
-          date: new Date(res.data.createdAt).toISOString().split("T")[0],
-          score: res.data.score,
-          status:
-            res.data.score >= 12
-              ? "Good"
-              : res.data.score >= 8
-              ? "Moderate"
-              : "Poor",
-        },
-        ...history,
-      ]);
-
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
-      alert("Error submitting health data");
+      console.error("Error fetching single result", err);
     }
   };
 
-  // 🔥 Logout (backend)
   const handleLogout = async () => {
-    await API.post("/auth/logout");
+    try {
+      await API.post("/auth/logout");
+    } catch (e) {
+      console.error("Logout error", e);
+    }
     navigate('/');
   };
 
-  // 🔥 Chart data (fixed mapping)
-  const chartData = result ? {
-    labels: ['Sleep', 'Appetite', 'Stress', 'Activity'],
-    datasets: [
-      {
-        data: [
-          result.sleep,
-          result.appetite,
-          result.stress,
-          result.activity,
-        ],
-      },
-    ],
-  } : null;
-
-  const getStatusColor = (status) => {
-    switch(status) {
-      case 'Good': return 'text-emerald-600 bg-emerald-50';
-      case 'Moderate': return 'text-amber-600 bg-amber-50';
-      case 'Poor': return 'text-rose-600 bg-rose-50';
-      default: return 'text-gray-600 bg-gray-50';
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-[#f9fafb]">
-
-      {/* Navbar */}
-      <nav className="bg-white shadow-sm border-b">
-        <div className="flex justify-between h-16 items-center px-6">
-          <div className="flex items-center space-x-3">
-            <Activity className="w-5 h-5 text-blue-500" />
-            <span className="font-bold text-xl">Health AI</span>
-          </div>
-
-          <button onClick={handleLogout} className="text-red-500">
-            Logout
-          </button>
+    <div className="min-h-screen bg-[#f8fafc] pb-12">
+      <nav className="bg-white sticky top-0 z-50 border-b shadow-sm h-16 flex items-center px-6 justify-between">
+        <div className="flex items-center gap-2">
+          <Activity className="text-indigo-600" />
+          <span className="font-bold">Health AI</span>
         </div>
+        <button onClick={handleLogout} className="text-rose-500 text-sm font-bold flex items-center gap-1">
+          <LogOut size={16}/> Logout
+        </button>
       </nav>
 
-      <main className="p-6 space-y-8">
-
-        {/* FORM */}
-        <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded-xl shadow">
-
-          <h2 className="font-bold text-lg">Health Form</h2>
-
-          {[
-            { name: 'sleepQuality', label: 'Sleep' },
-            { name: 'appetite', label: 'Appetite' },
-            { name: 'stressLevel', label: 'Stress' },
-            { name: 'physicalActivity', label: 'Activity' },
-          ].map((field) => (
-            <div key={field.name}>
-              <label>{field.label}</label>
-              <input
-                type="range"
-                min="1"
-                max="5"
-                name={field.name}
-                value={formData[field.name]}
-                onChange={handleSliderChange}
-              />
+      <main className="max-w-7xl mx-auto p-6 space-y-8">
+        {fetching ? (
+          <div className="py-20 flex justify-center"><Loader2 className="animate-spin text-indigo-500" /></div>
+        ) : (
+          <>
+            <div className="grid lg:grid-cols-2 gap-8">
+              <HealthForm onSuccess={handleSuccess} />
+              <ResultSection result={result} />
             </div>
-          ))}
-
-          <button className="bg-blue-500 text-white px-4 py-2 rounded">
-            Submit
-          </button>
-        </form>
-
-        {/* RESULT */}
-        {result && (
-          <div className="bg-white p-6 rounded-xl shadow">
-            <h2>Result</h2>
-
-            <p><b>Score:</b> {result.score}</p>
-            <p><b>Recommendation:</b> {result.recommendation}</p>
-
-            <div style={{ width: "300px" }}>
-              <Pie data={chartData} />
-            </div>
-          </div>
+            <HistoryTable history={history} onSelect={handleSelect} />
+          </>
         )}
-
-        {/* HISTORY */}
-        <div className="bg-white p-6 rounded-xl shadow">
-          <h2>History</h2>
-
-          {history.map((item) => (
-            <div key={item.id}>
-              {item.date} - {item.score} ({item.status})
-            </div>
-          ))}
-        </div>
-
       </main>
     </div>
   );
