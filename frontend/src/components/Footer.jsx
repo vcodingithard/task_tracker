@@ -42,7 +42,7 @@ const Footer = () => {
             <h3 className="text-sm font-semibold text-white mb-3">Contact</h3>
             <div className="space-y-2 text-sm">
               <p>📧 vivekshenoy6763@gmail.com</p>
-
+              <p>91+9901177522</p>
               <div className="flex gap-4 mt-2">
                 <a 
                   href="https://github.com/vcodingithard" 
@@ -70,8 +70,6 @@ const Footer = () => {
         {/* Bottom */}
         <div className="border-t border-slate-700 mt-8 pt-6 flex flex-col md:flex-row justify-between items-center text-xs text-slate-500">
           <p>© {currentYear} Vivek Shenoy</p>
-          <p>91+9901177522</p>
-          <p className="mt-2 md:mt-0">Built with MERN Stack</p>
         </div>
 
       </div>
