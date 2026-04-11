@@ -19,10 +19,11 @@ app.use(cookieParser());
 app.use(cors({
   origin: [
     "http://localhost:5173",
-    "https://healthcare-black-iota.vercel.app/h" // add this
+    "https://healthcare-black-iota.vercel.app" 
   ],
   credentials: true
 }));
+app.options('*', cors()); 
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/health", healthRoutes);
