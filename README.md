@@ -91,12 +91,12 @@ npm install
 
 Create a `.env` file:
 
-PORT=5000
+PORT=3000
 MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_secret_key
 
 Run backend:
-npm run dev
+nodemon app.js
 
 ---
 
@@ -124,10 +124,12 @@ GET    /api/health/:id
 - Dark mode
 - Role-based access
 - Notifications
+-Prakrathi Analysis Tool
 
 ---
 
 ## 👨‍💻 Author
 
-Vivek  
+U Vivek Shenoy  
 Full-Stack Developer
+9901177522
