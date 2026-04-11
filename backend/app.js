@@ -17,10 +17,12 @@ app.use(cookieParser());
 
 // CORS (React frontend)
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: [
+    "http://localhost:5173",
+    "https://healthcare-black-iota.vercel.app/h" // add this
+  ],
   credentials: true
 }));
-
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/health", healthRoutes);
