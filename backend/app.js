@@ -39,9 +39,6 @@ app.use(cors({
   credentials: true
 }));
 
-// 🔥 Handle preflight requests
-app.options("*", cors());
-
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/health", healthRoutes);
