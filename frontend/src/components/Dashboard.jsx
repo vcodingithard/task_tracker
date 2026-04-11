@@ -5,7 +5,7 @@ import API from "../api/axios";
 import HealthForm from './HealthForm';
 import ResultSection from './ResultSection';
 import HistoryTable from './HistoryTable';
-
+import { toast } from "sonner"; 
 export default function Dashboard({ setIsAuth }) {
   const navigate = useNavigate();
   const [result, setResult] = useState(null);

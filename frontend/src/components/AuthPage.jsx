@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from "../api/axios";
-
+import { toast } from "sonner"; 
 export default function AuthPage({ setIsAuth }) {
   const [isLogin, setIsLogin] = useState(true);
   const [name, setName] = useState('');
