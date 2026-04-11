@@ -4,7 +4,7 @@ import AuthPage from './components/AuthPage';
 import Dashboard from './components/Dashboard';
 import Footer from './components/Footer';
 import API from "./api/axios";
-
+import { Toaster } from 'sonner';
 function App() {
   const [isAuth, setIsAuth] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -30,7 +30,7 @@ function App() {
   return (
     <Router>
       <div className="font-sans text-gray-900 antialiased min-h-screen bg-[#f9fafb] flex flex-col">
-
+        <Toaster position="top-right" richColors />
         <Routes>
           {/* If logged in → redirect to dashboard */}
           <Route

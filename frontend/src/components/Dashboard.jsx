@@ -35,8 +35,8 @@ export default function Dashboard({ setIsAuth }) {
 
         setHistory(formatted);
       } catch (err) {
-        console.error("Error fetching history:", err);
-        setHistory([]); // Fallback to empty array
+        toast.error("Failed to load history");
+        setHistory([]);
       } finally {
         setFetching(false);
       }
@@ -71,7 +71,7 @@ export default function Dashboard({ setIsAuth }) {
     try {
       await API.post("/auth/logout");
     } catch (e) {
-      console.error("Logout error", e);
+      toast.error("Logout failed", { description: "Please try again." });
     }
 
     setIsAuth(false);

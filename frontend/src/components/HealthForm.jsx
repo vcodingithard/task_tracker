@@ -10,9 +10,11 @@ export default function HealthForm({ onSuccess }) {
     setLoading(true);
     try {
       const res = await API.post("/health", form);
-      if (onSuccess) onSuccess(res.data); 
+      if (onSuccess) onSuccess(res.data);
     } catch (err) {
-      alert("Error submitting form");
+      toast.error("Submission Error", {
+        description: "Could not save your health data.",
+      });
     } finally {
       setLoading(false);
     }
@@ -33,19 +35,19 @@ export default function HealthForm({ onSuccess }) {
                 {form[key]} / 5
               </span>
             </div>
-            
+
             <div className="relative flex items-center">
-              <input 
-                type="range" 
-                min="1" 
-                max="5" 
+              <input
+                type="range"
+                min="1"
+                max="5"
                 step="1"
-                value={form[key]} 
-                onChange={(e) => setForm({...form, [key]: Number(e.target.value)})}
+                value={form[key]}
+                onChange={(e) => setForm({ ...form, [key]: Number(e.target.value) })}
                 className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600 hover:bg-slate-200 transition-colors"
               />
             </div>
-            
+
             {/* Optional: Add low/high markers */}
             <div className="flex justify-between px-1">
               <span className="text-[10px] text-slate-400 font-medium">Low</span>
@@ -54,7 +56,7 @@ export default function HealthForm({ onSuccess }) {
           </div>
         ))}
 
-        <button 
+        <button
           disabled={loading}
           className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 disabled:bg-indigo-300 disabled:shadow-none mt-4 flex justify-center items-center gap-2"
         >

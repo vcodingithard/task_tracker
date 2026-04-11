@@ -29,7 +29,10 @@ export default function AuthPage({ setIsAuth }) {
       navigate("/dashboard");
 
     } catch (err) {
-      alert(err.response?.data?.message || "An error occurred");
+      const errorMessage = err.response?.data?.message || "An error occurred";
+      toast.error("Authentication Failed", {
+        description: errorMessage,
+      });
     } finally {
       setLoading(false);
     }
@@ -37,9 +40,9 @@ export default function AuthPage({ setIsAuth }) {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
-      
+
       <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-100">
-        
+
         {/* Header */}
         <div className="flex flex-col items-center mb-8">
           <div className="bg-blue-100 p-3 rounded-full mb-4">
