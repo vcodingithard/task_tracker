@@ -6,10 +6,10 @@ import HealthForm from './HealthForm';
 import ResultSection from './ResultSection';
 import HistoryTable from './HistoryTable';
 
-export default function Dashboard() {
+export default function Dashboard({ setIsAuth }) {
   const navigate = useNavigate();
   const [result, setResult] = useState(null);
-  const [history, setHistory] = useState([]); 
+  const [history, setHistory] = useState([]);
   const [fetching, setFetching] = useState(true);
 
   const getStatus = (score) => {
@@ -25,7 +25,7 @@ export default function Dashboard() {
         const res = await API.get("/health");
         // Extra Safety: Ensure we are dealing with an array
         const rawData = Array.isArray(res.data) ? res.data : [];
-        
+
         const formatted = rawData.map((item) => ({
           id: item._id,
           date: item.createdAt,
@@ -73,6 +73,8 @@ export default function Dashboard() {
     } catch (e) {
       console.error("Logout error", e);
     }
+
+    setIsAuth(false);
     navigate('/');
   };
 
@@ -84,7 +86,7 @@ export default function Dashboard() {
           <span className="font-bold">Health AI</span>
         </div>
         <button onClick={handleLogout} className="text-rose-500 text-sm font-bold flex items-center gap-1">
-          <LogOut size={16}/> Logout
+          <LogOut size={16} /> Logout
         </button>
       </nav>
 

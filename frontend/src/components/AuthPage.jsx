@@ -106,7 +106,7 @@ export default function AuthPage({ setIsAuth }) {
           </div>
 
           {/* Forgot password */}
-          {isLogin && (
+          {/* {isLogin && (
             <div className="flex justify-end">
               <button
                 type="button"
@@ -115,7 +115,7 @@ export default function AuthPage({ setIsAuth }) {
                 Forgot password?
               </button>
             </div>
-          )}
+          )} */}
 
           {/* Submit */}
           <button

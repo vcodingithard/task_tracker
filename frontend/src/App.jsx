@@ -33,15 +33,15 @@ function App() {
 
         <Routes>
           {/* If logged in → redirect to dashboard */}
-          <Route 
-            path="/" 
-            element={isAuth ? <Navigate to="/dashboard" /> : <AuthPage setIsAuth={setIsAuth} />} 
+          <Route
+            path="/"
+            element={isAuth ? <Navigate to="/dashboard" /> : <AuthPage setIsAuth={setIsAuth} />}
           />
 
           {/* Protected Route */}
-          <Route 
-            path="/dashboard" 
-            element={isAuth ? <Dashboard /> : <Navigate to="/" />} 
+          <Route
+            path="/dashboard"
+            element={isAuth ? <Dashboard setIsAuth={setIsAuth} /> : <Navigate to="/" />}
           />
 
           <Route path="*" element={<Navigate to="/" replace />} />
