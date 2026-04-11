@@ -7,8 +7,9 @@ export const signup = async (req, res) => {
   const { name, email, password } = req.body;
 
   try {
-    const userExists = await User.findOne({ email });
+    console.log("Signup request:", req.body);
 
+    const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ message: "User already exists" });
     }
@@ -23,10 +24,15 @@ export const signup = async (req, res) => {
 
     const token = generateToken(user._id);
 
+    console.log("Generated Token:", token);
+
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false
+      secure: true,        
+      sameSite: "None"     
     });
+
+    console.log("Cookie sent (Signup)");
 
     res.status(201).json({
       message: "User registered",
@@ -38,6 +44,7 @@ export const signup = async (req, res) => {
     });
 
   } catch (err) {
+    console.error("Signup Error:", err);
     res.status(500).json({ message: "Signup error" });
   }
 };
@@ -47,24 +54,29 @@ export const login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const user = await User.findOne({ email });
+    console.log("Login request:", req.body);
 
+    const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({ message: "User not found" });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
-
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
     const token = generateToken(user._id);
 
+    console.log("Generated Token:", token);
+
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false
+      secure: true,        
+      sameSite: "None"     
     });
+
+    console.log("Cookie sent (Login)");
 
     res.json({
       message: "Login successful",
@@ -75,12 +87,20 @@ export const login = async (req, res) => {
     });
 
   } catch (err) {
+    console.error("Login Error:", err);
     res.status(500).json({ message: "Login error" });
   }
 };
 
 // Logout
 export const logout = (req, res) => {
-  res.clearCookie("token");
+  console.log("Logout called");
+
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "None"
+  });
+
   res.json({ message: "Logged out" });
 };
