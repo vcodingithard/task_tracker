@@ -19,7 +19,8 @@ app.use(cookieParser());
 app.use(cors({
   origin: [
     "http://localhost:5173",
-    "https://healthcare-black-iota.vercel.app" 
+    "https://healthcare-black-iota.vercel.app",
+    "https://healthcare-d9i04ib8g-vivek-shenoys-projects.vercel.app"
   ],
   credentials: true
 }));
