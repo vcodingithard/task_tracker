@@ -3,7 +3,44 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f3f4f6;
+    --text-primary: #111827;
+    --text-secondary: #4b5563;
+    --accent: #2563eb;
+    --streak-fire: #ef4444;
+  }
+
+  .dark {
+    --bg-primary: #0d1117;
+    --bg-secondary: #161b22;
+    --text-primary: #c9d1d9;
+    --text-secondary: #8b949e;
+    --accent: #58a6ff;
+  }
+
   body {
-    @apply bg-[#f9fafb] text-gray-800 antialiased font-sans;
+    @apply bg-[var(--bg-primary)] text-[var(--bg-primary)] antialiased font-sans transition-colors duration-300;
+    color: var(--text-primary);
   }
 }
+
+@layer components {
+  .card {
+    @apply bg-[var(--bg-secondary)] rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-800;
+  }
+  
+  .btn-primary {
+    @apply bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-all transform active:scale-95;
+  }
+}
+
+/* Custom Heatmap Styles */
+.react-calendar-heatmap .color-empty { fill: #ebedf0; }
+.dark .react-calendar-heatmap .color-empty { fill: #161b22; }
+.react-calendar-heatmap .color-scale-1 { fill: #9be9a8; }
+.react-calendar-heatmap .color-scale-2 { fill: #40c463; }
+.react-calendar-heatmap .color-scale-3 { fill: #30a14e; }
+.react-calendar-heatmap .color-scale-4 { fill: #216e39; }
+

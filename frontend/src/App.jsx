@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import AuthPage from './components/AuthPage';
 import Dashboard from './components/Dashboard';
-import Footer from './components/Footer';
+
 import API from "./api/axios";
 import { Toaster } from 'sonner';
 function App() {
@@ -47,8 +47,6 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
 
-        {/* ✅ Show footer only if logged in */}
-        {isAuth && <Footer />}
 
       </div>
     </Router>
