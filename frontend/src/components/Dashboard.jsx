@@ -11,7 +11,8 @@ import StreakCard from './StreakCard';
 import TaskItem from './TaskItem';
 import YearlyHeatmap from './YearlyHeatmap';
 import AddTaskModal from './AddTaskModal';
-
+import ganeshaImage from "../../public/ganesha.png"
+import hanumanImage from "../../public/hanuman.png"
 const QUOTES = [
   "Consistency beats motivation.",
   "Do it even when you don't feel like it.",
@@ -338,6 +339,12 @@ export default function Dashboard({ setIsAuth }) {
         onClose={() => setIsModalOpen(false)} 
         onAdd={handleAddTask} 
       />
+
+    <div style={{ display: "flex", justifyContent: "center", gap: "20px", marginTop: "20px" }}>
+      <img src={ganeshaImage} alt="Ganesha" style={{ width: "200px", height: "auto" }} />
+      <img src={hanumanImage} alt="Hanuman" style={{ width: "200px", height: "auto" }} />
+    </div>
+
     </div>
   );
 }

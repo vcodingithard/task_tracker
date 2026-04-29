@@ -1,8 +1,8 @@
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { clsx } from "clsx";
 import { motion } from "framer-motion";
 
-// ✅ FIXED COLORS (clear visibility)
+// ✅ COLORS
 const getIntensityClass = (count) => {
   if (count === 0) return "bg-gray-800";
   if (count < 2) return "bg-green-500/40";
@@ -13,25 +13,43 @@ const getIntensityClass = (count) => {
 
 const YearlyHeatmap = ({ history }) => {
   const containerRef = useRef(null);
-  const [year, setYear] = useState(new Date().getFullYear());
 
-  // ✅ Available years
+  const today = new Date().toLocaleDateString("en-CA");
+
+  const [year, setYear] = useState(new Date().getFullYear());
+  const [selectedDate, setSelectedDate] = useState(today);
+
+  // ✅ Scroll to today
+  useEffect(() => {
+    const el = containerRef.current?.querySelector(
+      `[data-date='${today}']`
+    );
+    if (el) {
+      el.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+        inline: "center",
+      });
+    }
+  }, [today]);
+
+  // ✅ Years
   const availableYears = useMemo(() => {
-    if (!history || history.length === 0) return [new Date().getFullYear()];
+    if (!history || history.length === 0) return [year];
     const years = Array.from(
       new Set(history.map((item) => new Date(item.date).getFullYear()))
     );
     return years.sort((a, b) => b - a);
-  }, [history]);
+  }, [history, year]);
 
-  // ✅ Filter by year
+  // ✅ Filter
   const filteredHistory = useMemo(() => {
     return history?.filter(
       (item) => new Date(item.date).getFullYear() === year
     ) || [];
   }, [history, year]);
 
-  // ✅ Map for fast lookup
+  // ✅ Map
   const historyMap = useMemo(() => {
     const map = {};
     filteredHistory.forEach((item) => {
@@ -40,19 +58,21 @@ const YearlyHeatmap = ({ history }) => {
     return map;
   }, [filteredHistory]);
 
-  // ✅ Generate all days of year
+  // ✅ Days
   const days = useMemo(() => {
     const start = new Date(`${year}-01-01`);
     const end = new Date(`${year}-12-31`);
     const d = [];
+
     while (start <= end) {
-      d.push(start.toISOString().split("T")[0]);
+      d.push(start.toLocaleDateString("en-CA")); // ✅ LOCAL FIX
       start.setDate(start.getDate() + 1);
     }
+
     return d;
   }, [year]);
 
-  // ✅ Convert into weeks (GitHub style)
+  // ✅ Weeks
   const weeks = useMemo(() => {
     const w = [];
     let currentWeek = [];
@@ -98,7 +118,11 @@ const YearlyHeatmap = ({ history }) => {
     containerRef.current.scrollLeft = scrollLeft.current - walk;
   };
 
-  // ✅ Total count
+  // ✅ Selected data
+  const selectedData = historyMap[selectedDate];
+  const selectedCount = selectedData?.count || 0;
+
+  // ✅ Total
   const totalCompletions = useMemo(() => {
     return filteredHistory.reduce((sum, h) => sum + (h.count || 0), 0);
   }, [filteredHistory]);
@@ -107,13 +131,12 @@ const YearlyHeatmap = ({ history }) => {
     <div className="w-full bg-gray-900 border border-gray-800 rounded-2xl p-5 shadow-lg">
 
       {/* HEADER */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-4">
         <div>
           <h2 className="text-xl font-bold text-white">
             Activity Overview
           </h2>
 
-          {/* ✅ FIXED TEXT */}
           <p className="text-sm text-gray-400 mt-1">
             {totalCompletions === 0
               ? "No tasks completed this year"
@@ -121,16 +144,34 @@ const YearlyHeatmap = ({ history }) => {
           </p>
         </div>
 
-        {/* YEAR SELECT */}
         <select
           value={year}
           onChange={(e) => setYear(Number(e.target.value))}
-          className="bg-gray-800 text-white text-sm px-3 py-1.5 rounded-lg border border-gray-700 outline-none hover:border-blue-500 transition"
+          className="bg-gray-800 text-white text-sm px-3 py-1.5 rounded-lg border border-gray-700"
         >
           {availableYears.map((y) => (
             <option key={y} value={y}>{y}</option>
           ))}
         </select>
+      </div>
+
+      {/* ✅ CENTER INFO PANEL */}
+      <div className="flex justify-center mb-4">
+        <div className="bg-gray-800 px-5 py-3 rounded-xl text-center shadow-md min-w-[220px]">
+          <div className="text-white font-semibold text-sm">
+            {selectedCount === 0
+              ? "No contributions"
+              : `${selectedCount} contribution${selectedCount > 1 ? "s" : ""}`}
+          </div>
+
+          <div className="text-gray-400 text-xs mt-1">
+            {new Date(selectedDate).toLocaleDateString("en-US", {
+              month: "long",
+              day: "numeric",
+              year: "numeric",
+            })}
+          </div>
+        </div>
       </div>
 
       {/* HEATMAP */}
@@ -142,7 +183,7 @@ const YearlyHeatmap = ({ history }) => {
         onMouseUp={onMouseUp}
         onMouseMove={onMouseMove}
       >
-        <div className="flex gap-1 w-max pt-4">
+        <div className="flex gap-1 w-max pt-2">
           {weeks.map((week, wIdx) => (
             <motion.div
               key={wIdx}
@@ -158,38 +199,21 @@ const YearlyHeatmap = ({ history }) => {
                 const record = historyMap[day];
                 const count = record?.count || 0;
 
+                const isToday = day === today;
+                const isSelected = day === selectedDate;
+
                 return (
-                  <div key={day} className="relative group">
-                    <div
-                      className={clsx(
-                        "w-[14px] h-[14px] rounded-[3px] transition-all",
-                        getIntensityClass(count),
-                        "hover:ring-2 ring-white/30"
-                      )}
-                    />
-
-                    {/* ✅ FIXED TOOLTIP */}
-                    <div className="absolute z-50 hidden group-hover:block bg-gray-800 text-xs text-white px-3 py-2 rounded-md shadow-lg -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap">
-                      
-                      {count === 0 ? (
-                        <span className="text-gray-300">
-                          No tasks completed
-                        </span>
-                      ) : (
-                        <span className="font-semibold">
-                          {count} task{count > 1 ? "s" : ""} completed
-                        </span>
-                      )}
-
-                      <div className="text-[10px] text-gray-400 mt-1">
-                        {new Date(day).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric'
-                        })}
-                      </div>
-                    </div>
-                  </div>
+                  <div
+                    key={day}
+                    data-date={day}
+                    onClick={() => setSelectedDate(day)}
+                    className={clsx(
+                      "w-[14px] h-[14px] rounded-[3px] transition-all cursor-pointer",
+                      getIntensityClass(count),
+                      isToday && "ring-2 ring-yellow-400",
+                      isSelected && "scale-125 ring-2 ring-white"
+                    )}
+                  />
                 );
               })}
             </motion.div>
