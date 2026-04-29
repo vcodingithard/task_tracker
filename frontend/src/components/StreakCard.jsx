@@ -4,23 +4,23 @@ import { motion } from 'framer-motion';
 
 const StreakCard = ({ currentStreak, longestStreak }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="card flex items-center justify-between overflow-hidden relative"
+        className="card flex items-center justify-between overflow-hidden relative group hover:border-orange-500/50 transition-colors"
       >
-        <div>
-          <p className="text-[var(--text-secondary)] text-sm font-medium uppercase tracking-wider">Current Streak</p>
-          <h2 className="text-4xl font-bold mt-1 flex items-center gap-2">
-            {currentStreak} <span className="text-2xl text-[var(--streak-fire)]">🔥</span>
+        <div className="relative z-10">
+          <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-2">Current Streak</p>
+          <h2 className="text-5xl font-black mt-1 flex items-center gap-3 text-white">
+            {currentStreak} <span className="text-3xl filter drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]">🔥</span>
           </h2>
-          <p className="text-xs text-[var(--text-secondary)] mt-2">
-            {currentStreak > 0 ? "You're doing great! Keep it up." : "Start your streak today!"}
+          <p className="text-sm text-gray-500 mt-3 font-medium">
+            {currentStreak > 0 ? "You're doing great! Keep the fire burning." : "Start your streak today!"}
           </p>
         </div>
-        <div className="opacity-10 absolute -right-4 -bottom-4">
-          <Flame size={120} className="text-[var(--streak-fire)]" />
+        <div className="opacity-[0.03] group-hover:opacity-[0.08] transition-opacity absolute -right-4 -bottom-4 z-0">
+          <Flame size={160} className="text-orange-500" />
         </div>
       </motion.div>
 
@@ -28,19 +28,19 @@ const StreakCard = ({ currentStreak, longestStreak }) => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="card flex items-center justify-between overflow-hidden relative"
+        className="card flex items-center justify-between overflow-hidden relative group hover:border-yellow-500/50 transition-colors"
       >
-        <div>
-          <p className="text-[var(--text-secondary)] text-sm font-medium uppercase tracking-wider">Longest Streak</p>
-          <h2 className="text-4xl font-bold mt-1 flex items-center gap-2">
-            {longestStreak} <Trophy className="text-yellow-500" size={32} />
+        <div className="relative z-10">
+          <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-2">Longest Streak</p>
+          <h2 className="text-5xl font-black mt-1 flex items-center gap-3 text-white">
+            {longestStreak} <Trophy className="text-yellow-500 drop-shadow-[0_0_15px_rgba(234,179,8,0.8)]" size={36} />
           </h2>
-          <p className="text-xs text-[var(--text-secondary)] mt-2">
+          <p className="text-sm text-gray-500 mt-3 font-medium">
             Your all-time best record!
           </p>
         </div>
-        <div className="opacity-10 absolute -right-4 -bottom-4">
-          <Trophy size={120} className="text-yellow-500" />
+        <div className="opacity-[0.03] group-hover:opacity-[0.08] transition-opacity absolute -right-4 -bottom-4 z-0">
+          <Trophy size={160} className="text-yellow-500" />
         </div>
       </motion.div>
     </div>

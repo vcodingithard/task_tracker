@@ -1,93 +1,213 @@
-import React, { useState } from 'react';
-import { clsx } from 'clsx';
+import React, { useState, useMemo, useRef } from "react";
+import { clsx } from "clsx";
+import { motion } from "framer-motion";
+
+// ✅ FIXED COLORS (clear visibility)
+const getIntensityClass = (count) => {
+  if (count === 0) return "bg-gray-800";
+  if (count < 2) return "bg-green-500/40";
+  if (count < 4) return "bg-green-500/60";
+  if (count < 6) return "bg-green-500/80";
+  return "bg-green-500";
+};
 
 const YearlyHeatmap = ({ history }) => {
-  const days = [];
-  const today = new Date();
-  
-  for (let i = 364; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    days.push(d.toISOString().split('T')[0]);
-  }
+  const containerRef = useRef(null);
+  const [year, setYear] = useState(new Date().getFullYear());
 
-  const historyMap = history.reduce((acc, item) => {
-    acc[item.date] = item;
-    return acc;
-  }, {});
+  // ✅ Available years
+  const availableYears = useMemo(() => {
+    if (!history || history.length === 0) return [new Date().getFullYear()];
+    const years = Array.from(
+      new Set(history.map((item) => new Date(item.date).getFullYear()))
+    );
+    return years.sort((a, b) => b - a);
+  }, [history]);
 
-  const [hoverData, setHoverData] = useState(null);
+  // ✅ Filter by year
+  const filteredHistory = useMemo(() => {
+    return history?.filter(
+      (item) => new Date(item.date).getFullYear() === year
+    ) || [];
+  }, [history, year]);
 
-  const weeks = [];
-  let currentWeek = [];
-  
-  // To make it look like a proper calendar, first day needs to be offset by day of week
-  const firstDayOfWeek = new Date(days[0]).getDay(); 
-  // We pad the first week
-  for (let i = 0; i < firstDayOfWeek; i++) {
-    currentWeek.push(null);
-  }
+  // ✅ Map for fast lookup
+  const historyMap = useMemo(() => {
+    const map = {};
+    filteredHistory.forEach((item) => {
+      map[item.date] = item;
+    });
+    return map;
+  }, [filteredHistory]);
 
-  days.forEach((day, index) => {
-    currentWeek.push(day);
-    if (currentWeek.length === 7 || index === days.length - 1) {
-      weeks.push(currentWeek);
-      currentWeek = [];
+  // ✅ Generate all days of year
+  const days = useMemo(() => {
+    const start = new Date(`${year}-01-01`);
+    const end = new Date(`${year}-12-31`);
+    const d = [];
+    while (start <= end) {
+      d.push(start.toISOString().split("T")[0]);
+      start.setDate(start.getDate() + 1);
     }
-  });
+    return d;
+  }, [year]);
+
+  // ✅ Convert into weeks (GitHub style)
+  const weeks = useMemo(() => {
+    const w = [];
+    let currentWeek = [];
+
+    const firstDayOffset = new Date(days[0]).getDay();
+    for (let i = 0; i < firstDayOffset; i++) currentWeek.push(null);
+
+    days.forEach((day) => {
+      currentWeek.push(day);
+      if (currentWeek.length === 7) {
+        w.push(currentWeek);
+        currentWeek = [];
+      }
+    });
+
+    if (currentWeek.length > 0) {
+      while (currentWeek.length < 7) currentWeek.push(null);
+      w.push(currentWeek);
+    }
+
+    return w;
+  }, [days]);
+
+  // ✅ Drag scroll
+  const isDragging = useRef(false);
+  const startX = useRef(0);
+  const scrollLeft = useRef(0);
+
+  const onMouseDown = (e) => {
+    isDragging.current = true;
+    startX.current = e.pageX - containerRef.current.offsetLeft;
+    scrollLeft.current = containerRef.current.scrollLeft;
+  };
+
+  const onMouseLeave = () => (isDragging.current = false);
+  const onMouseUp = () => (isDragging.current = false);
+
+  const onMouseMove = (e) => {
+    if (!isDragging.current) return;
+    e.preventDefault();
+    const x = e.pageX - containerRef.current.offsetLeft;
+    const walk = (x - startX.current) * 1.5;
+    containerRef.current.scrollLeft = scrollLeft.current - walk;
+  };
+
+  // ✅ Total count
+  const totalCompletions = useMemo(() => {
+    return filteredHistory.reduce((sum, h) => sum + (h.count || 0), 0);
+  }, [filteredHistory]);
 
   return (
-    <div className="flex flex-col items-start w-full overflow-x-auto py-4 relative">
-      <div className="flex gap-1 relative">
-        {weeks.map((week, wIdx) => (
-          <div key={wIdx} className="flex flex-col gap-1">
-            {week.map((day, dIdx) => {
-              if (!day) return <div key={`empty-${wIdx}-${dIdx}`} className="w-3 h-3" />;
+    <div className="w-full bg-gray-900 border border-gray-800 rounded-2xl p-5 shadow-lg">
 
-              const record = historyMap[day];
-              let statusClass = "bg-gray-200 dark:bg-gray-800";
-              let statusText = "No Activity";
-              let reason = "";
+      {/* HEADER */}
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h2 className="text-xl font-bold text-white">
+            Activity Overview
+          </h2>
 
-              if (record) {
-                if (record.completed) {
-                  statusClass = "bg-green-500 hover:bg-green-400";
-                  statusText = "Completed";
-                } else if (record.completed === false) {
-                  statusClass = "bg-red-500 hover:bg-red-400";
-                  statusText = "Missed";
-                  reason = record.reason || "No reason given";
-                }
-              }
+          {/* ✅ FIXED TEXT */}
+          <p className="text-sm text-gray-400 mt-1">
+            {totalCompletions === 0
+              ? "No tasks completed this year"
+              : `${totalCompletions} tasks completed in ${year}`}
+          </p>
+        </div>
 
-              return (
-                <div
-                  key={day}
-                  className={clsx("w-3 h-3 rounded-[2px] transition-all cursor-pointer hover:ring-2 hover:ring-gray-400", statusClass)}
-                  onMouseEnter={(e) => {
-                    const rect = e.target.getBoundingClientRect();
-                    setHoverData({ x: rect.left + rect.width / 2, y: rect.top, date: day, status: statusText, reason });
-                  }}
-                  onMouseLeave={() => setHoverData(null)}
-                />
-              );
-            })}
-          </div>
-        ))}
+        {/* YEAR SELECT */}
+        <select
+          value={year}
+          onChange={(e) => setYear(Number(e.target.value))}
+          className="bg-gray-800 text-white text-sm px-3 py-1.5 rounded-lg border border-gray-700 outline-none hover:border-blue-500 transition"
+        >
+          {availableYears.map((y) => (
+            <option key={y} value={y}>{y}</option>
+          ))}
+        </select>
       </div>
 
-      {hoverData && (
-        <div 
-          className="fixed z-50 pointer-events-none bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-xl whitespace-nowrap transform -translate-x-1/2 -translate-y-full mt-[-8px]"
-          style={{ top: hoverData.y, left: hoverData.x }}
-        >
-          <div className="font-bold text-sm mb-1">{new Date(hoverData.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</div>
-          <div className={hoverData.status === 'Completed' ? 'text-green-400 font-medium' : hoverData.status === 'Missed' ? 'text-red-400 font-medium' : 'text-gray-400'}>
-            {hoverData.status}
-          </div>
-          {hoverData.reason && <div className="text-gray-300 italic mt-1 border-t border-gray-700 pt-1">"{hoverData.reason}"</div>}
+      {/* HEATMAP */}
+      <div
+        ref={containerRef}
+        className="overflow-x-auto cursor-grab active:cursor-grabbing pb-4"
+        onMouseDown={onMouseDown}
+        onMouseLeave={onMouseLeave}
+        onMouseUp={onMouseUp}
+        onMouseMove={onMouseMove}
+      >
+        <div className="flex gap-1 w-max pt-4">
+          {weeks.map((week, wIdx) => (
+            <motion.div
+              key={wIdx}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: wIdx * 0.01 }}
+              className="flex flex-col gap-1"
+            >
+              {week.map((day, dIdx) => {
+                if (!day)
+                  return <div key={dIdx} className="w-[14px] h-[14px]" />;
+
+                const record = historyMap[day];
+                const count = record?.count || 0;
+
+                return (
+                  <div key={day} className="relative group">
+                    <div
+                      className={clsx(
+                        "w-[14px] h-[14px] rounded-[3px] transition-all",
+                        getIntensityClass(count),
+                        "hover:ring-2 ring-white/30"
+                      )}
+                    />
+
+                    {/* ✅ FIXED TOOLTIP */}
+                    <div className="absolute z-50 hidden group-hover:block bg-gray-800 text-xs text-white px-3 py-2 rounded-md shadow-lg -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap">
+                      
+                      {count === 0 ? (
+                        <span className="text-gray-300">
+                          No tasks completed
+                        </span>
+                      ) : (
+                        <span className="font-semibold">
+                          {count} task{count > 1 ? "s" : ""} completed
+                        </span>
+                      )}
+
+                      <div className="text-[10px] text-gray-400 mt-1">
+                        {new Date(day).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </motion.div>
+          ))}
         </div>
-      )}
+      </div>
+
+      {/* LEGEND */}
+      <div className="flex items-center justify-end gap-2 mt-4 text-xs text-gray-400">
+        <span>Less</span>
+        <div className="w-[14px] h-[14px] bg-gray-800 rounded-sm" />
+        <div className="w-[14px] h-[14px] bg-green-500/40 rounded-sm" />
+        <div className="w-[14px] h-[14px] bg-green-500/60 rounded-sm" />
+        <div className="w-[14px] h-[14px] bg-green-500/80 rounded-sm" />
+        <div className="w-[14px] h-[14px] bg-green-500 rounded-sm" />
+        <span>More</span>
+      </div>
+
     </div>
   );
 };

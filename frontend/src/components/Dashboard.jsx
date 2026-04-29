@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, CheckCircle, Loader2, Plus, LayoutDashboard, Settings } from 'lucide-react';
+import { LogOut, CheckCircle, Loader2, Plus, AlertCircle, Quote } from 'lucide-react';
 import { toast } from "sonner";
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -16,15 +16,12 @@ const QUOTES = [
   "Consistency beats motivation.",
   "Do it even when you don't feel like it.",
   "No excuses. Just results.",
-  "Make your parents proud.",
   "Your future is watching you.",
   "Discipline = Freedom.",
   "Small steps daily = big results.",
   "Pain is temporary. Quitting lasts forever.",
   "Don't stop when you're tired. Stop when you're done.",
-  "Focus on the process, the results will follow.",
-  "The only bad workout is the one that didn't happen.",
-  "Embrace the struggle. It's forging your strength."
+  "Focus on the process, the results will follow."
 ];
 
 export default function Dashboard({ setIsAuth }) {
@@ -45,8 +42,8 @@ export default function Dashboard({ setIsAuth }) {
     setQuote(QUOTES[Math.floor(Math.random() * QUOTES.length)]);
     
     const updateDate = () => {
-      const options = { year: 'numeric', month: 'long', day: 'numeric' };
-      setCurrentDateString(`Today: ${new Date().toLocaleDateString('en-US', options)}`);
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      setCurrentDateString(`${new Date().toLocaleDateString('en-US', options)}`);
     };
     updateDate();
     const interval = setInterval(updateDate, 1000 * 60 * 60);
@@ -83,7 +80,6 @@ export default function Dashboard({ setIsAuth }) {
       setTasks(prev => [...prev, { ...res.data, completed: false }]);
       toast.success("Task added successfully");
       
-      // Update daily count if needed
       if (taskData.type === 'daily') {
         setDailyCount(prev => prev + 1);
       }
@@ -158,9 +154,11 @@ export default function Dashboard({ setIsAuth }) {
   Object.values(historyPerTask).forEach(taskHistory => {
      taskHistory.forEach(record => {
         if (!dateMap[record.date]) {
-           dateMap[record.date] = { completed: true, reason: [] };
+           dateMap[record.date] = { count: 0, completed: true, reason: [] };
         }
-        if (!record.completed) {
+        if (record.completed) {
+           dateMap[record.date].count += 1;
+        } else {
            dateMap[record.date].completed = false;
            if(record.reason) dateMap[record.date].reason.push(record.reason);
         }
@@ -169,6 +167,7 @@ export default function Dashboard({ setIsAuth }) {
   Object.keys(dateMap).forEach(date => {
      globalHistory.push({
         date,
+        count: dateMap[date].count,
         completed: dateMap[date].completed,
         reason: dateMap[date].reason.join(', ')
      });
@@ -176,146 +175,160 @@ export default function Dashboard({ setIsAuth }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--bg-primary)] relative">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--bg-primary)]">
         <Loader2 className="animate-spin text-blue-500" size={48} />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg-primary)] pb-20 relative overflow-hidden">
+    <div className="min-h-screen bg-[var(--bg-primary)] pb-20 relative overflow-hidden font-sans">
+      {/* Dynamic Background Blurs */}
+      <div className="fixed top-[-20%] left-[-10%] w-[50%] h-[50%] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="fixed bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-purple-600/10 rounded-full blur-[120px] pointer-events-none" />
+
       {/* Navbar */}
-      <nav className="sticky top-0 z-40 bg-[var(--bg-primary)]/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
-        <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white">
-              <CheckCircle size={20} />
+      <nav className="sticky top-0 z-40 bg-[var(--bg-primary)]/70 backdrop-blur-xl border-b border-white/5 shadow-sm">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
+              <CheckCircle size={20} strokeWidth={2.5} />
             </div>
-            <span className="font-bold text-xl tracking-tight">TaskFlow</span>
+            <span className="font-extrabold text-xl tracking-tight text-white">TaskFlow</span>
           </div>
           
-          <div className="flex items-center gap-4">
-            <button onClick={handleLogout} className="p-2 text-[var(--text-secondary)] hover:text-red-500 transition-colors">
-              <LogOut size={20} />
-            </button>
-          </div>
+          <button onClick={handleLogout} className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all">
+            <LogOut size={20} />
+          </button>
         </div>
       </nav>
 
-      <main className="max-w-5xl mx-auto px-6 pt-8">
-        {/* HUGE INSPIRATION BANNER */}
-        <div className="w-full bg-gradient-to-r from-orange-500/10 via-red-500/10 to-orange-500/10 border border-orange-200/50 dark:border-orange-900/50 rounded-2xl p-6 mb-8 flex flex-col md:flex-row items-center gap-6 shadow-lg">
-           <div className="flex gap-4 shrink-0">
-              <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-white dark:bg-gray-800 p-2 shadow-xl border-4 border-orange-400 flex items-center justify-center">
-                <img src="/ganesha.png" alt="Lord Hanuman" className="w-full h-full object-contain rounded-full" />
-              </div>
-              <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-white dark:bg-gray-800 p-2 shadow-xl border-4 border-orange-400 flex items-center justify-center">
-                <img src="/hanuman.png" alt="Lord Ganesha" className="w-full h-full object-contain rounded-full" />
-              </div>
-           </div>
-           <div>
-              <h2 className="text-2xl md:text-3xl font-black text-orange-600 dark:text-orange-400 uppercase tracking-wider mb-2">Strength & Wisdom</h2>
-              <p className="text-lg md:text-xl text-[var(--text-primary)] font-medium italic">"{quote}"</p>
-              <p className="text-sm md:text-base text-[var(--text-secondary)] mt-2 font-bold">Conquer your day with unbreakable discipline.</p>
-           </div>
-        </div>
-
-        {/* Regular Welcome Row */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+      <main className="max-w-6xl mx-auto px-6 pt-10">
+        
+        {/* Welcome Section */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
           <div>
-            <p className="text-blue-500 font-medium mb-1">{currentDateString}</p>
-            <h1 className="text-3xl font-black">Welcome back!</h1>
+            <motion.p 
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} 
+              className="text-blue-400 font-semibold mb-1 tracking-wide uppercase text-xs"
+            >
+              {currentDateString}
+            </motion.p>
+            <motion.h1 
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+              className="text-4xl md:text-5xl font-black text-white tracking-tight"
+            >
+              Master Your Day.
+            </motion.h1>
           </div>
-          <button 
+          <motion.button 
+            initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}
             onClick={() => setIsModalOpen(true)}
             className="btn-primary flex items-center gap-2 justify-center"
           >
-            <Plus size={20} /> Add New Task
-          </button>
+            <Plus size={20} strokeWidth={2.5} /> Add Task
+          </motion.button>
         </div>
 
-        {/* Streak Stats */}
-        <StreakCard 
-          currentStreak={streakInfo.currentStreak} 
-          longestStreak={streakInfo.longestStreak} 
-        />
+        {/* Global Stats */}
+        <div className="mb-10">
+          <StreakCard currentStreak={streakInfo.currentStreak} longestStreak={streakInfo.longestStreak} />
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Today's Tasks */}
-          <div className="lg:col-span-2">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold flex items-center gap-2">
-                Today's Tasks <span className="text-sm font-normal text-[var(--text-secondary)]">({completedCount}/{totalCount})</span>
-              </h2>
-            </div>
-            
-            {/* Progress Bar */}
-            <div className="bg-[var(--bg-secondary)] h-2 w-full rounded-full mb-6 overflow-hidden">
-              <motion.div 
-                initial={{ width: 0 }}
-                animate={{ width: `${progress}%` }}
-                className="bg-blue-600 h-full rounded-full"
-              />
-            </div>
+          
+          {/* Main Tasks Column */}
+          <div className="lg:col-span-2 flex flex-col gap-6">
+            <div className="card p-8">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-white tracking-tight">
+                  Daily Focus
+                </h2>
+                <div className="text-sm font-semibold bg-[var(--bg-primary)] px-3 py-1 rounded-full border border-[var(--border)] text-gray-300">
+                  {completedCount} / {totalCount} Done
+                </div>
+              </div>
+              
+              {/* Progress Bar */}
+              <div className="bg-[var(--bg-primary)] h-3 w-full rounded-full mb-8 overflow-hidden shadow-inner border border-[var(--border)]">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progress}%` }}
+                  transition={{ duration: 0.8, ease: "easeOut" }}
+                  className="bg-gradient-to-r from-blue-500 to-indigo-500 h-full rounded-full shadow-[0_0_15px_rgba(59,130,246,0.6)]"
+                />
+              </div>
 
-            <div className="space-y-1">
-              <AnimatePresence mode="popLayout">
-                {tasks.length > 0 ? (
-                  tasks.map(task => (
-                    <TaskItem 
-                      key={task._id} 
-                      task={task} 
-                      history={historyPerTask[task._id] || []}
-                      onComplete={handleCompleteTask}
-                      onMiss={handleMissTask}
-                      onDelete={handleDeleteTask}
-                    />
-                  ))
-                ) : (
-                  <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="py-20 text-center card bg-transparent border-dashed flex flex-col items-center"
-                  >
-                    <p className="text-[var(--text-secondary)] mb-4">No tasks for today. Add one to get started!</p>
-                    <p className="text-sm font-medium text-blue-500 italic">"{quote}"</p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <div className="space-y-4">
+                <AnimatePresence mode="popLayout">
+                  {tasks.length > 0 ? (
+                    tasks.map(task => (
+                      <TaskItem 
+                        key={task._id} 
+                        task={task} 
+                        history={historyPerTask[task._id] || []}
+                        onComplete={handleCompleteTask}
+                        onMiss={handleMissTask}
+                        onDelete={handleDeleteTask}
+                      />
+                    ))
+                  ) : (
+                    <motion.div 
+                      initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                      className="py-16 text-center bg-[var(--bg-primary)] border border-dashed border-[var(--border)] rounded-2xl flex flex-col items-center"
+                    >
+                      <CheckCircle className="text-gray-600 mb-4" size={48} strokeWidth={1} />
+                      <p className="text-gray-400 font-medium mb-2">You have a clear slate.</p>
+                      <button onClick={() => setIsModalOpen(true)} className="text-blue-500 hover:text-blue-400 font-bold transition-colors">
+                        Create your first task →
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           </div>
 
-          {/* Sidebar / Heatmap */}
-          <div className="lg:col-span-1 flex flex-col gap-8">
-            <div className="card">
-              <h3 className="font-bold text-lg mb-2">Yearly Consistency</h3>
-              <YearlyHeatmap history={globalHistory} />
+          {/* Sidebar */}
+          <div className="lg:col-span-1 flex flex-col gap-6">
+            
+            {/* Global Yearly Heatmap */}
+            <YearlyHeatmap history={globalHistory} />
+
+            {/* Motivational Quote */}
+            <div className="card bg-gradient-to-br from-[var(--bg-secondary)] to-[var(--bg-primary)] border-l-4 border-l-blue-500">
+              <Quote className="text-blue-500/40 mb-3" size={32} />
+              <p className="text-lg text-gray-300 font-medium italic leading-relaxed">
+                "{quote}"
+              </p>
             </div>
             
-            {/* Failure Reflection */}
-            <div className="card bg-red-50/50 dark:bg-red-900/10 border-red-200 dark:border-red-800/30">
-              <h3 className="font-bold text-lg text-red-600 dark:text-red-400 mb-4">Failure Reflection</h3>
+            {/* Missed Tasks Reflection */}
+            <div className="card border border-red-900/30">
+              <div className="flex items-center gap-2 mb-4 text-red-400">
+                <AlertCircle size={20} />
+                <h3 className="font-bold text-lg tracking-tight">Failure Reflection</h3>
+              </div>
+              
               {recentMissed.length > 0 ? (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {recentMissed.map(miss => (
-                    <div key={miss._id} className="text-sm border-l-2 border-red-400 pl-3">
-                      <p className="font-semibold">{miss.title} <span className="text-xs text-gray-500 font-normal ml-2">{new Date(miss.date).toLocaleDateString()}</span></p>
-                      <p className="text-gray-600 dark:text-gray-400 italic">"{miss.reason}"</p>
+                    <div key={miss._id} className="text-sm bg-red-950/10 p-3 rounded-xl border border-red-900/20">
+                      <div className="flex justify-between items-start mb-1">
+                        <p className="font-bold text-gray-200">{miss.title}</p>
+                        <span className="text-xs text-gray-500 font-semibold">{new Date(miss.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric'})}</span>
+                      </div>
+                      <p className="text-gray-400 italic">"{miss.reason}"</p>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-[var(--text-secondary)]">No recent failures. Keep the streak alive! 🔥</p>
+                <div className="text-center py-6">
+                  <p className="text-sm text-green-500/80 font-bold">Perfect record lately! 🚀</p>
+                </div>
               )}
             </div>
 
-            <div className="card bg-gradient-to-br from-blue-600 to-indigo-700 text-white border-none shadow-xl shadow-blue-500/20 text-center py-8 relative overflow-hidden">
-              <h3 className="font-bold text-xl mb-4 text-blue-100">Daily Discipline</h3>
-              <p className="text-lg italic leading-relaxed">
-                "{quote}"
-              </p>
-              <p className="text-sm mt-6 text-blue-200 font-medium uppercase tracking-widest">Strength • Wisdom • Focus</p>
-            </div>
           </div>
         </div>
       </main>

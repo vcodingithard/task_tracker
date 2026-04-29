@@ -4,7 +4,6 @@ import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import healthRoutes from "./routes/healthRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
 
 dotenv.config();
@@ -42,7 +41,6 @@ app.use(cors({
 
 // Routes
 app.use("/api/auth", authRoutes);
-app.use("/api/health", healthRoutes);
 app.use("/api/tasks", taskRoutes);
 
 // Test route

@@ -1,10 +1,11 @@
 import React from 'react';
-import { CheckCircle2, Circle, XCircle, Trash2, Calendar, Flame, Trophy } from 'lucide-react';
+import { CheckCircle2, XCircle, Trash2, Calendar, Flame, Trophy } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { clsx } from 'clsx';
 
 const TaskItem = ({ task, history, onComplete, onMiss, onDelete }) => {
-  const last7Days = [...Array(7)].map((_, i) => {
+
+  const last30Days = [...Array(30)].map((_, i) => {
     const d = new Date();
     d.setDate(d.getDate() - i);
     const dateStr = d.toISOString().split('T')[0];
@@ -18,110 +19,141 @@ const TaskItem = ({ task, history, onComplete, onMiss, onDelete }) => {
   return (
     <motion.div 
       layout
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 20 }}
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      whileHover={{ y: -3 }}
       className={clsx(
-        "flex items-center justify-between p-4 mb-3 rounded-xl border transition-all group",
+        "flex flex-col md:flex-row justify-between p-5 mb-4 rounded-2xl border shadow-lg transition-all",
         task.completed 
-          ? "bg-green-50/50 dark:bg-green-900/10 border-green-200 dark:border-green-800/30" 
+          ? "bg-green-900/20 border-green-700"
           : task.missed
-          ? "bg-red-50/50 dark:bg-red-900/10 border-red-200 dark:border-red-800/30"
-          : "bg-[var(--bg-secondary)] border-gray-200 dark:border-gray-800"
+          ? "bg-red-900/20 border-red-700"
+          : "bg-gray-900 border-gray-700 hover:border-blue-500/50"
       )}
     >
-      <div className="flex items-center gap-4 flex-1">
+
+      {/* LEFT */}
+      <div className="flex gap-4 flex-1">
+
+        {/* ACTIONS */}
         {!task.completed && !task.missed && (
           <div className="flex flex-col gap-2">
             <button 
               onClick={() => onComplete(task._id)}
-              title="Mark as Completed"
-              className="text-gray-400 hover:text-green-500 transition-colors"
+              className="p-2 rounded-lg bg-gray-800 hover:bg-green-600 text-gray-300 hover:text-white transition"
             >
-              <CheckCircle2 size={24} />
+              <CheckCircle2 size={20}/>
             </button>
+
             <button 
               onClick={() => onMiss(task._id)}
-              title="Mark as Missed"
-              className="text-gray-400 hover:text-red-500 transition-colors"
+              className="p-2 rounded-lg bg-gray-800 hover:bg-red-600 text-gray-300 hover:text-white transition"
             >
-              <XCircle size={24} />
+              <XCircle size={20}/>
             </button>
           </div>
         )}
-        
+
         {(task.completed || task.missed) && (
-          <div className={task.completed ? "text-green-500" : "text-red-500"}>
-            {task.completed ? <CheckCircle2 size={24} /> : <XCircle size={24} />}
+          <div className={clsx(
+            "p-3 rounded-full",
+            task.completed ? "bg-green-600 text-white" : "bg-red-600 text-white"
+          )}>
+            {task.completed ? <CheckCircle2 size={22}/> : <XCircle size={22}/>}
           </div>
         )}
-        
+
+        {/* TEXT */}
         <div className="flex-1">
-          <div className="flex items-center justify-between">
-            <div className="flex flex-col">
-              <h3 className={clsx(
-                "font-semibold text-lg transition-all",
-                (task.completed || task.missed) && "line-through text-[var(--text-secondary)] opacity-60"
-              )}>
-                {task.title}
-              </h3>
-              {task.missed && task.reason && (
-                <span className="text-xs text-red-500 font-medium mt-1">Failed: {task.reason}</span>
-              )}
-            </div>
-            
-            {/* Mini Consistency Graph */}
-            <div className="flex gap-1 ml-4">
-              {last7Days.map((day, i) => (
-                <div 
-                  key={i}
-                  className={clsx(
-                    "w-2 h-2 rounded-[2px] transition-all",
-                    day.status === 'completed'
-                      ? "bg-green-500 shadow-sm shadow-green-500/20" 
-                      : day.status === 'missed'
-                      ? "bg-red-500 shadow-sm shadow-red-500/20"
-                      : "bg-gray-200 dark:bg-gray-800"
-                  )}
-                  title={`${day.date} - ${day.status}`}
-                />
-              ))}
-            </div>
-          </div>
+
+          {/* TITLE */}
+          <h3 className={clsx(
+            "text-lg font-semibold",
+            task.completed || task.missed
+              ? "line-through text-gray-500"
+              : "text-white"
+          )}>
+            {task.title}
+          </h3>
+
+          {/* DESCRIPTION (FIXED VISIBILITY 🔥) */}
           {task.description && (
-            <p className="text-sm text-[var(--text-secondary)] mt-0.5 line-clamp-1">
+            <p className="text-sm text-gray-300 mt-1 leading-relaxed">
               {task.description}
             </p>
           )}
-          <div className="flex items-center gap-4 mt-3">
+
+          {/* MISSED REASON */}
+          {task.missed && task.reason && (
+            <div className="mt-2 text-xs text-red-300 bg-red-900/30 px-2 py-1 rounded-md inline-block">
+              Reason: {task.reason}
+            </div>
+          )}
+
+          {/* TAG + STATS */}
+          <div className="flex flex-wrap items-center gap-3 mt-4">
+
             <span className={clsx(
-              "text-[10px] px-2 py-0.5 rounded-full font-bold uppercase",
-              task.type === 'daily' 
-                ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" 
-                : "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
+              "text-xs px-2 py-1 rounded-md font-semibold",
+              task.type === 'daily'
+                ? "bg-blue-600 text-white"
+                : "bg-purple-600 text-white"
             )}>
               {task.type}
             </span>
+
+            {/* STREAK */}
             {task.streak && (
-              <div className="flex items-center gap-3 text-xs text-[var(--text-secondary)]">
-                <span className="flex items-center gap-1 font-medium" title="Current Streak"><Flame size={14} className="text-orange-500"/> {task.streak.current}</span>
-                <span className="flex items-center gap-1 font-medium" title="Longest Streak"><Trophy size={14} className="text-yellow-500"/> {task.streak.longest}</span>
-                <span className="flex items-center gap-1 font-medium" title="Total Completions"><CheckCircle2 size={14} className="text-blue-500"/> {task.streak.totalCompletions || 0}</span>
+              <div className="flex items-center gap-4 text-xs bg-gray-800 px-3 py-1 rounded-lg">
+
+                <span className="flex items-center gap-1 text-orange-400">
+                  <Flame size={14}/> {task.streak.current}
+                </span>
+
+                <span className="flex items-center gap-1 text-yellow-400">
+                  <Trophy size={14}/> {task.streak.longest}
+                </span>
+
+                <span className="flex items-center gap-1 text-blue-400">
+                  <CheckCircle2 size={14}/> {task.streak.totalCompletions || 0}
+                </span>
+
               </div>
             )}
-            <span className="text-[10px] text-[var(--text-secondary)] flex items-center gap-1 ml-auto">
-              <Calendar size={10} /> {new Date(task.createdAt).toLocaleDateString()}
+
+            {/* DATE */}
+            <span className="text-xs text-gray-400 ml-auto flex items-center gap-1">
+              <Calendar size={12}/>
+              {new Date(task.createdAt).toLocaleDateString()}
             </span>
           </div>
         </div>
       </div>
 
+      {/* HEATMAP (FIXED VISIBILITY 🔥) */}
+      <div className="flex gap-1 mt-4 md:mt-0 md:ml-4 p-2 bg-gray-800 rounded-lg overflow-x-auto">
+        {last30Days.map((day, i) => (
+          <div key={i} className="relative group">
+            <div className={clsx(
+              "w-3 h-3 rounded-sm",
+              day.status === 'completed'
+                ? "bg-green-500"
+                : day.status === 'missed'
+                ? "bg-red-500"
+                : "bg-gray-700"
+            )} />
+          </div>
+        ))}
+      </div>
+
+      {/* DELETE */}
       <button 
         onClick={() => onDelete(task._id)}
-        className="p-2 text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 md:opacity-100 ml-2"
+        className="absolute top-3 right-3 p-2 text-gray-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition"
       >
-        <Trash2 size={18} />
+        <Trash2 size={18}/>
       </button>
+
     </motion.div>
   );
 };
